@@ -109,3 +109,4 @@ D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\refint\AgendamentoMed
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.pdb
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.genruntimeconfig.cache
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\ref\AgendamentoMedico.API.dll
+D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.sourcelink.json

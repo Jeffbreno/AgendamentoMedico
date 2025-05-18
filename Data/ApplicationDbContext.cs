@@ -15,6 +15,8 @@ namespace AgendamentoMedico.API.Data
         public DbSet<Disponibilidade> Disponibilidades { get; set; }
         public DbSet<Paciente> Pacientes { get; set; }
         public DbSet<Agendamento> Agendamentos { get; set; }
+        public DbSet<Atendimento> Atendimentos { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
