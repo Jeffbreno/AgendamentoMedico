@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AgendamentoMedico.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250519190211_FixForeignKeyRelations")]
-    partial class FixForeignKeyRelations
+    [Migration("20250519221932_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,6 +47,10 @@ namespace AgendamentoMedico.API.Migrations
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 

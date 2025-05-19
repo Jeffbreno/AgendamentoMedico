@@ -142,6 +142,98 @@ namespace AgendamentoMedico.API.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "Agendamentos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    PacienteId = table.Column<int>(type: "int", nullable: false),
+                    MedicoId = table.Column<int>(type: "int", nullable: false),
+                    EspecialidadeId = table.Column<int>(type: "int", nullable: false),
+                    ConvenioId = table.Column<int>(type: "int", nullable: false),
+                    DataHora = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Status = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Agendamentos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_Convenios_ConvenioId",
+                        column: x => x.ConvenioId,
+                        principalTable: "Convenios",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_Especialidades_EspecialidadeId",
+                        column: x => x.EspecialidadeId,
+                        principalTable: "Especialidades",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_Medicos_MedicoId",
+                        column: x => x.MedicoId,
+                        principalTable: "Medicos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_Pacientes_PacienteId",
+                        column: x => x.PacienteId,
+                        principalTable: "Pacientes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Atendimentos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    AgendamentoId = table.Column<int>(type: "int", nullable: false),
+                    DataAtendimento = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Observacoes = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Atendimentos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Atendimentos_Agendamentos_AgendamentoId",
+                        column: x => x.AgendamentoId,
+                        principalTable: "Agendamentos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_ConvenioId",
+                table: "Agendamentos",
+                column: "ConvenioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_EspecialidadeId",
+                table: "Agendamentos",
+                column: "EspecialidadeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_MedicoId",
+                table: "Agendamentos",
+                column: "MedicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_PacienteId",
+                table: "Agendamentos",
+                column: "PacienteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Atendimentos_AgendamentoId",
+                table: "Atendimentos",
+                column: "AgendamentoId");
+
             migrationBuilder.CreateIndex(
                 name: "IX_Disponibilidades_EspecialidadeId",
                 table: "Disponibilidades",
@@ -167,19 +259,25 @@ namespace AgendamentoMedico.API.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Atendimentos");
+
+            migrationBuilder.DropTable(
                 name: "Disponibilidades");
 
             migrationBuilder.DropTable(
                 name: "MedicoEspecialidades");
 
             migrationBuilder.DropTable(
-                name: "Pacientes");
+                name: "Agendamentos");
 
             migrationBuilder.DropTable(
                 name: "Especialidades");
 
             migrationBuilder.DropTable(
                 name: "Medicos");
+
+            migrationBuilder.DropTable(
+                name: "Pacientes");
 
             migrationBuilder.DropTable(
                 name: "Convenios");
