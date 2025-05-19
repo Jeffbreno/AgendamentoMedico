@@ -9,16 +9,10 @@ namespace AgendamentoMedico.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MedicosController : ControllerBase
+    public class MedicosController(ApplicationDbContext context, IMapper mapper) : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
-
-        public MedicosController(ApplicationDbContext context, IMapper mapper)
-        {
-            _context = context;
-            _mapper = mapper;
-        }
+        private readonly ApplicationDbContext _context = context;
+        private readonly IMapper _mapper = mapper;
 
         // GET: api/medicos
         [HttpGet]
@@ -69,7 +63,7 @@ namespace AgendamentoMedico.API.Controllers
             }
 
             var medico = _mapper.Map<Medico>(medicoCreateDto);
-            
+
             _context.Medicos.Add(medico);
             await _context.SaveChangesAsync();
 
@@ -79,19 +73,19 @@ namespace AgendamentoMedico.API.Controllers
                     .ThenInclude(me => me.Especialidade)
                 .FirstOrDefaultAsync(m => m.Id == medico.Id);
 
-            return CreatedAtAction(nameof(GetMedico), 
-                new { id = medico.Id }, 
+            return CreatedAtAction(nameof(GetMedico),
+                new { id = medico.Id },
                 _mapper.Map<MedicoReadDto>(medicoCompleto));
         }
 
-        // PUT: api/medicos/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMedico(int id, MedicoUpdateDto medicoUpdateDto)
+        // PATCH: api/medicos/5
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PartialUpdateMedico(int id, MedicoUpdateDto medicoUpdateDto)
         {
-            if (id != medicoUpdateDto.Id)
-            {
-                return BadRequest("ID da URL não corresponde ao ID do corpo");
-            }
+            // if (id != medicoUpdateDto.Id)
+            // {
+            //     return BadRequest("ID da URL não corresponde ao ID do corpo");
+            // }
 
             var medico = await _context.Medicos
                 .Include(m => m.MedicoEspecialidades)
@@ -116,14 +110,21 @@ namespace AgendamentoMedico.API.Controllers
 
                 // Atualiza especialidades
                 _context.MedicoEspecialidades.RemoveRange(medico.MedicoEspecialidades);
-                
+
                 medico.MedicoEspecialidades = medicoUpdateDto.EspecialidadeIds
                     .Select(eid => new MedicoEspecialidade { EspecialidadeId = eid })
                     .ToList();
             }
 
-            _mapper.Map(medicoUpdateDto, medico);
-            
+            // Atualiza apenas os campos não nulos
+            if (medicoUpdateDto.Nome != null)
+            {
+                medico.Nome = medicoUpdateDto.Nome;
+            }
+
+            _mapper.Map(medicoUpdateDto, medico, opts =>
+                opts.Items["IgnoreNullValues"] = true);
+
             try
             {
                 await _context.SaveChangesAsync();

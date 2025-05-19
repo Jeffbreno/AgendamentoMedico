@@ -16,5 +16,6 @@ namespace AgendamentoMedico.API.Models
         public Convenio Convenio { get; set; } = null!;
 
         public DateTime DataHora { get; set; }
+        public string Status { get; set; } = "Agendado";
     }
 }

@@ -8,8 +8,7 @@ namespace AgendamentoMedico.API.Models
         [Required(ErrorMessage = "O nome do médico é obrigatório")]
         [StringLength(125, MinimumLength = 5, ErrorMessage = "O nome do médico deve ter entre 5 e 125 caracteres")]
         public required string Nome { get; set; }
-
-        public ICollection<MedicoEspecialidade> MedicoEspecialidades { get; set; } = new List<MedicoEspecialidade>();
+        public ICollection<MedicoEspecialidade> MedicoEspecialidades { get; set; } = [];
     }
 
     public class MedicoEspecialidade

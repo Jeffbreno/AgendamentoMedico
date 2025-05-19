@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AgendamentoMedico.API.DTOs
 {
     public class PacienteCreateDto
     {
         [Required(ErrorMessage = "O nome do paciente é obrigatório")]
-        [StringLength(100, ErrorMessage = "O nome não pode exceder 100 caracteres")]
+        [StringLength(125, ErrorMessage = "O nome não pode exceder 125 caracteres")]
         public string Nome { get; set; } = null!;
 
         [EmailAddress(ErrorMessage = "Email inválido")]
@@ -30,9 +31,7 @@ namespace AgendamentoMedico.API.DTOs
 
     public class PacienteUpdateDto
     {
-        public int Id { get; set; }
-
-        [StringLength(100, ErrorMessage = "O nome não pode exceder 100 caracteres")]
+        [StringLength(125, ErrorMessage = "O nome não pode exceder 125 caracteres")]
         public string? Nome { get; set; }
 
         [EmailAddress(ErrorMessage = "Email inválido")]
@@ -41,6 +40,7 @@ namespace AgendamentoMedico.API.DTOs
         [Phone(ErrorMessage = "Telefone inválido")]
         public string? Telefone { get; set; }
 
+        [ForeignKey("Convenio")]
         public int? ConvenioId { get; set; }
     }
 }

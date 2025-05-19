@@ -63,7 +63,7 @@ namespace AgendamentoMedico.API.Controllers
             }
 
             var paciente = _mapper.Map<Paciente>(pacienteCreateDto);
-            
+
             _context.Pacientes.Add(paciente);
             await _context.SaveChangesAsync();
 
@@ -73,53 +73,70 @@ namespace AgendamentoMedico.API.Controllers
                 .LoadAsync();
 
             var pacienteReadDto = _mapper.Map<PacienteReadDto>(paciente);
-            
-            return CreatedAtAction(nameof(GetPaciente), 
-                new { id = pacienteReadDto.Id }, 
+
+            return CreatedAtAction(nameof(GetPaciente),
+                new { id = pacienteReadDto.Id },
                 pacienteReadDto);
         }
 
-        // PUT: api/pacientes/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePaciente(int id, PacienteUpdateDto pacienteUpdateDto)
+        // PATCH: api/pacientes/5
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PartialPaciente(int id, PacienteUpdateDto pacienteUpdateDto)
         {
-            if (id != pacienteUpdateDto.Id)
+
+            if (!ModelState.IsValid)
             {
-                return BadRequest("ID da URL não corresponde ao ID do corpo");
+                return BadRequest(ModelState);
             }
 
-            var paciente = await _context.Pacientes.FindAsync(id);
-            if (paciente == null)
-            {
-                return NotFound();
-            }
+            var paciente = await _context.Pacientes
+                .Include(p => p.Convenio)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (paciente == null) return NotFound();
 
             // Verifica se o novo convênio existe (se foi fornecido)
             if (pacienteUpdateDto.ConvenioId.HasValue)
             {
-                var convenio = await _context.Convenios.FindAsync(pacienteUpdateDto.ConvenioId.Value);
-                if (convenio == null)
+                var convenio = await _context.Convenios
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == pacienteUpdateDto.ConvenioId.Value);
+
+                 if (convenio == null)
                 {
-                    return BadRequest("Novo convênio não encontrado");
+                    return BadRequest("O convênio especificado não existe");
                 }
             }
 
-            _mapper.Map(pacienteUpdateDto, paciente);
-            
+            // Aplica apenas as atualizações não-nulas
+            if (pacienteUpdateDto.Nome != null)
+            {
+                paciente.Nome = pacienteUpdateDto.Nome;
+            }
+
+            if (pacienteUpdateDto.Email != null)
+            {
+                paciente.Email = pacienteUpdateDto.Email;
+            }
+
+            if (pacienteUpdateDto.Telefone != null)
+            {
+                paciente.Telefone = pacienteUpdateDto.Telefone;
+            }
+
+            if (pacienteUpdateDto.ConvenioId.HasValue)
+            {
+                paciente.ConvenioId = pacienteUpdateDto.ConvenioId.Value;
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
-                if (!PacienteExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                Console.WriteLine($"Erro ao atualizar paciente: {ex.InnerException?.Message}");
+                return StatusCode(500, "Erro ao atualizar paciente");
             }
 
             return NoContent();

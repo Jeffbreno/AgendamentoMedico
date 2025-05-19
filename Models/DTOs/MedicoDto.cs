@@ -5,9 +5,9 @@ namespace AgendamentoMedico.API.DTOs
     public class MedicoCreateDto
     {
         [Required]
-        [StringLength(125)]
+        [StringLength(125, MinimumLength = 5)]
         public string Nome { get; set; } = null!;
-        public List<int> EspecialidadeIds { get; set; } = null!;
+        public List<int>? EspecialidadeIds { get; set; }
     }
 
     public class MedicoReadDto
@@ -19,8 +19,6 @@ namespace AgendamentoMedico.API.DTOs
 
     public class MedicoUpdateDto
     {
-        public int Id { get; set; }
-
         [StringLength(125)]
         public string? Nome { get; set; }
 

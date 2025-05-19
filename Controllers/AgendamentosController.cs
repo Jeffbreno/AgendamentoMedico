@@ -1,6 +1,7 @@
 using AgendamentoMedico.API.Data;
 using AgendamentoMedico.API.DTOs;
 using AgendamentoMedico.API.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,18 +9,28 @@ namespace AgendamentoMedico.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AgendamentosController(ApplicationDbContext context) : ControllerBase
+    public class AgendamentosController(ApplicationDbContext context, IMapper mapper) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
+        private readonly IMapper _mapper = mapper;
 
+        private readonly List<string> _statusValidos = ["Agendado", "Confirmado", "Cancelado", "Realizado", "Falta"];
+
+        /// <summary>
+        /// Cria um novo agendamento médico
+        /// </summary>
         // POST: /api/agendamentos
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(AgendamentoReadDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CriarAgendamento([FromBody] AgendamentoCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            if (!string.IsNullOrEmpty(dto.Status) && !_statusValidos.Contains(dto.Status))
+                return BadRequest($"Status inválido. Os status válidos são: {string.Join(", ", _statusValidos)}");
 
             var paciente = await _context.Pacientes.Include(p => p.Convenio)
                 .FirstOrDefaultAsync(p => p.Id == dto.PacienteId);
@@ -68,32 +79,28 @@ namespace AgendamentoMedico.API.Controllers
                 ConvenioId = dto.ConvenioId,
                 EspecialidadeId = dto.EspecialidadeId,
                 MedicoId = disponibilidade.MedicoId,
-                DataHora = dto.DataHora
+                DataHora = dto.DataHora,
+                Status = dto.Status ?? "Agendado"
             };
 
             _context.Agendamentos.Add(agendamento);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(CriarAgendamento), new { id = agendamento.Id }, new
-            {
-                agendamento.Id,
-                paciente = paciente.Nome,
-                agendamento.EspecialidadeId,
-                especialidadeNome = especialidade.Nome,
-                agendamento.ConvenioId,
-                convenioNome = convenio.Nome,
-                dataHora = agendamento.DataHora.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-                medico = disponibilidade.Medico.Nome
-            });
+            var agendamentoReadDto = _mapper.Map<AgendamentoReadDto>(agendamento);
+            return CreatedAtAction(nameof(ObterAgendamentoPorId), new { id = agendamento.Id }, agendamentoReadDto);
         }
 
+        /// <summary>
+        /// Obtém todos os agendamentos com filtros opcionais
+        /// </summary>
         // GET: /api/agendamentos?dataInicio=AAAA-MM-DD&dataFim=AAAA-MM-DD&paciente=Nome
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AgendamentoReadDto>))]
         public async Task<IActionResult> GetAgendamentos(
             [FromQuery] DateTime? dataInicio,
             [FromQuery] DateTime? dataFim,
-            [FromQuery] string? paciente)
+            [FromQuery] string? paciente,
+            [FromQuery] string? status)
         {
             var query = _context.Agendamentos
                 .Include(a => a.Paciente)
@@ -111,20 +118,65 @@ namespace AgendamentoMedico.API.Controllers
             if (!string.IsNullOrWhiteSpace(paciente))
                 query = query.Where(a => a.Paciente.Nome.Contains(paciente));
 
-            var resultados = await query
-                .OrderBy(a => a.DataHora)
-                .Select(a => new
-                {
-                    a.Id,
-                    Paciente = a.Paciente.Nome,
-                    Especialidade = a.Especialidade.Nome,
-                    Convenio = a.Convenio.Nome,
-                    Medico = a.Medico.Nome,
-                    DataHora = a.DataHora.ToString("yyyy-MM-ddTHH:mm:ssZ")
-                })
-                .ToListAsync();
+            if (!string.IsNullOrWhiteSpace(status) && _statusValidos.Contains(status))
+                query = query.Where(a => a.Status == status);
 
-            return Ok(resultados);
+            var agendamentos = await query.OrderBy(a => a.DataHora).ToListAsync();
+            var agendamentosDto = _mapper.Map<List<AgendamentoReadDto>>(agendamentos);
+
+            return Ok(agendamentosDto);
+        }
+
+        /// <summary>
+        /// Obtém um agendamento por ID
+        /// </summary>
+        // GET: /api/agendamentos/1
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AgendamentoReadDto))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ObterAgendamentoPorId(int id)
+        {
+            var agendamento = await _context.Agendamentos
+                .Include(a => a.Paciente)
+                .Include(a => a.Especialidade)
+                .Include(a => a.Convenio)
+                .Include(a => a.Medico)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (agendamento == null)
+                return NotFound();
+
+            var agendamentoDto = _mapper.Map<AgendamentoReadDto>(agendamento);
+            return Ok(agendamentoDto);
+        }
+
+        /// <summary>
+        /// Atualiza o status de um agendamento
+        /// </summary>
+        [HttpPatch("{id}/status")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AgendamentoReadDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AtualizarStatus(int id, [FromBody] string novoStatus)
+        {
+            if (!_statusValidos.Contains(novoStatus))
+                return BadRequest($"Status inválido. Os status válidos são: {string.Join(", ", _statusValidos)}");
+
+            var agendamento = await _context.Agendamentos.FindAsync(id);
+            if (agendamento == null)
+                return NotFound();
+
+            agendamento.Status = novoStatus;
+            await _context.SaveChangesAsync();
+
+            // Recarrega as entidades relacionadas para o DTO
+            await _context.Entry(agendamento).Reference(a => a.Paciente).LoadAsync();
+            await _context.Entry(agendamento).Reference(a => a.Especialidade).LoadAsync();
+            await _context.Entry(agendamento).Reference(a => a.Convenio).LoadAsync();
+            await _context.Entry(agendamento).Reference(a => a.Medico).LoadAsync();
+
+            var agendamentoDto = _mapper.Map<AgendamentoReadDto>(agendamento);
+            return Ok(agendamentoDto);
         }
 
     }

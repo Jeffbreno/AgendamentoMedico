@@ -11,8 +11,6 @@ namespace AgendamentoMedico.API.DTOs
 
     public class EspecialidadeUpdateDto
     {
-        public int Id { get; set; }
-
         [Required(ErrorMessage = "O nome da especialidade é obrigatório")]
         [StringLength(125, ErrorMessage = "O nome não pode exceder 100 caracteres")]
         public string Nome { get; set; } = null!;

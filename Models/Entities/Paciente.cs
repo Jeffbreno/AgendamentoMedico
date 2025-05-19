@@ -6,8 +6,9 @@ namespace AgendamentoMedico.API.Models
         public string Nome { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string Telefone { get; set; } = null!;
-        
+
         public int ConvenioId { get; set; }
-        public Convenio Convenio { get; set; } = null!;
+        public Convenio? Convenio { get; set; }
+        // public ICollection<Consulta> Consultas { get; set; }
     }
 }

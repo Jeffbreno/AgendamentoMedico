@@ -57,15 +57,10 @@ namespace AgendamentoMedico.API.Controllers
                 especialidadeReadDto);
         }
 
-        // PUT: api/especialidades/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEspecialidade(int id, EspecialidadeUpdateDto especialidadeUpdateDto)
+        // PATCH: api/especialidades/{id}
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PartialEspecialidade(int id, EspecialidadeUpdateDto especialidadeUpdateDto)
         {
-            if (id != especialidadeUpdateDto.Id)
-            {
-                return BadRequest("ID da URL não corresponde ao ID do corpo da requisição");
-            }
-
             var especialidade = await _context.Especialidades.FindAsync(id);
             if (especialidade == null)
             {
