@@ -1,6 +1,7 @@
 using AgendamentoMedico.API.Data;
 using AgendamentoMedico.API.DTOs;
 using AgendamentoMedico.API.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,75 +9,141 @@ namespace AgendamentoMedico.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PacientesController(ApplicationDbContext context) : ControllerBase
+    public class PacientesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context = context;
+        private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        // POST: /api/pacientes
-        [HttpPost]
-        public async Task<IActionResult> PostPaciente([FromBody] PacienteCreateDto dto)
+        public PacientesController(ApplicationDbContext context, IMapper mapper)
         {
-            if (string.IsNullOrWhiteSpace(dto.Nome) || string.IsNullOrWhiteSpace(dto.Email))
-                return BadRequest("Nome e e-mail são obrigatórios.");
-
-            var convenio = await _context.Convenios.FindAsync(dto.ConvenioId);
-            if (convenio == null)
-                return BadRequest("Convênio não encontrado.");
-
-            var paciente = new Paciente
-            {
-                Nome = dto.Nome,
-                Email = dto.Email,
-                Telefone = dto.Telefone,
-                ConvenioId = dto.ConvenioId
-            };
-
-            _context.Pacientes.Add(paciente);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPaciente), new { id = paciente.Id }, paciente);
+            _context = context;
+            _mapper = mapper;
         }
 
-        // GET: /api/pacientes
+        // GET: api/pacientes
         [HttpGet]
-        public async Task<IActionResult> GetPacientes()
+        public async Task<ActionResult<IEnumerable<PacienteReadDto>>> GetPacientes()
         {
             var pacientes = await _context.Pacientes
                 .Include(p => p.Convenio)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Nome,
-                    p.Email,
-                    p.Telefone,
-                    Convenio = new { p.Convenio.Id, p.Convenio.Nome }
-                })
                 .ToListAsync();
 
-            return Ok(pacientes);
+            return Ok(_mapper.Map<IEnumerable<PacienteReadDto>>(pacientes));
         }
 
-        // GET: /api/pacientes/{id}
+        // GET: api/pacientes/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetPaciente(int id)
+        public async Task<ActionResult<PacienteReadDto>> GetPaciente(int id)
         {
             var paciente = await _context.Pacientes
                 .Include(p => p.Convenio)
-                .Where(p => p.Id == id)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Nome,
-                    p.Email,
-                    p.Telefone,
-                    Convenio = new { p.Convenio.Id, p.Convenio.Nome }
-                })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (paciente == null)
+            {
                 return NotFound();
+            }
 
-            return Ok(paciente);
+            return Ok(_mapper.Map<PacienteReadDto>(paciente));
+        }
+
+        // POST: api/pacientes
+        [HttpPost]
+        public async Task<ActionResult<PacienteReadDto>> CreatePaciente(PacienteCreateDto pacienteCreateDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var convenio = await _context.Convenios.FindAsync(pacienteCreateDto.ConvenioId);
+            if (convenio == null)
+            {
+                return BadRequest("Convênio não encontrado");
+            }
+
+            var paciente = _mapper.Map<Paciente>(pacienteCreateDto);
+            
+            _context.Pacientes.Add(paciente);
+            await _context.SaveChangesAsync();
+
+            // Carrega o convênio para retornar no DTO
+            await _context.Entry(paciente)
+                .Reference(p => p.Convenio)
+                .LoadAsync();
+
+            var pacienteReadDto = _mapper.Map<PacienteReadDto>(paciente);
+            
+            return CreatedAtAction(nameof(GetPaciente), 
+                new { id = pacienteReadDto.Id }, 
+                pacienteReadDto);
+        }
+
+        // PUT: api/pacientes/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePaciente(int id, PacienteUpdateDto pacienteUpdateDto)
+        {
+            if (id != pacienteUpdateDto.Id)
+            {
+                return BadRequest("ID da URL não corresponde ao ID do corpo");
+            }
+
+            var paciente = await _context.Pacientes.FindAsync(id);
+            if (paciente == null)
+            {
+                return NotFound();
+            }
+
+            // Verifica se o novo convênio existe (se foi fornecido)
+            if (pacienteUpdateDto.ConvenioId.HasValue)
+            {
+                var convenio = await _context.Convenios.FindAsync(pacienteUpdateDto.ConvenioId.Value);
+                if (convenio == null)
+                {
+                    return BadRequest("Novo convênio não encontrado");
+                }
+            }
+
+            _mapper.Map(pacienteUpdateDto, paciente);
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PacienteExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/pacientes/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePaciente(int id)
+        {
+            var paciente = await _context.Pacientes.FindAsync(id);
+            if (paciente == null)
+            {
+                return NotFound();
+            }
+
+            _context.Pacientes.Remove(paciente);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool PacienteExists(int id)
+        {
+            return _context.Pacientes.Any(e => e.Id == id);
         }
     }
 }

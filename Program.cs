@@ -1,12 +1,23 @@
 using AgendamentoMedico.API.Data;
 using AgendamentoMedico.API.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v0.1", new OpenApiInfo { 
+        Title = "Agendamento Médico API", 
+        Version = "v0.1",
+        Description = "API para gerenciamento de agendamentos médicos"
+    });
+});
 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -31,10 +42,21 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v0.1/swagger.json", "Agendamento Médico v0.1");
+        c.RoutePrefix = "swagger"; 
+    });
 }
 
 app.UseHttpsRedirection();
+
+// Middlewares
+app.UseRouting();
+app.UseAuthorization();
+
+// Mapeia os controllers
+app.MapControllers();
 
 var summaries = new[]
 {
@@ -60,8 +82,8 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    // Garante que o banco está criado
-    context.Database.EnsureCreated();
+    // Migrações automáticas 
+    await context.Database.MigrateAsync();
 
     // Verifica se já tem dados
     if (!context.Convenios.Any())

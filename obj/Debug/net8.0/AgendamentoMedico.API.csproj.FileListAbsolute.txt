@@ -95,6 +95,7 @@ D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.csproj.CoreCompileInputs.cache
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.MvcApplicationPartsAssemblyInfo.cs
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.MvcApplicationPartsAssemblyInfo.cache
+D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.sourcelink.json
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\staticwebassets.build.json
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\staticwebassets.development.json
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\staticwebassets\msbuild.AgendamentoMedico.API.Microsoft.AspNetCore.StaticWebAssets.props
@@ -109,4 +110,5 @@ D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\refint\AgendamentoMed
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.pdb
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.genruntimeconfig.cache
 D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\ref\AgendamentoMedico.API.dll
-D:\Jefferson\GitHub\AgendamentoMedico.API\obj\Debug\net8.0\AgendamentoMedico.API.sourcelink.json
+D:\Jefferson\GitHub\AgendamentoMedico.API\bin\Debug\net8.0\AutoMapper.dll
+D:\Jefferson\GitHub\AgendamentoMedico.API\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
