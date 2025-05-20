@@ -1,29 +1,36 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8.0
     container_name: mysql-agendamento
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: AgendamentoDb
+      MYSQL_USER: agendamento_user  
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: '%'  
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      interval: 10s
+      retries: 10
 
   api:
-    build: .
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: agendamento-api
     ports:
-      - "5000:5000"
+      - "5110:5110"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=mysql;Database=AgendamentoDb;User=root;Password=password;
-    command: ["dotnet", "AgendamentoMedico.API.dll"]
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=mysql;Database=AgendamentoDb;User=root;Password=password;"
 
 volumes:
   mysql_data:

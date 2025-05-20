@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\AgendamentoMedico.API.csproj": {}
+    "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\backend\\AgendamentoMedico.API.csproj": {}
   },
   "projects": {
-    "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\AgendamentoMedico.API.csproj": {
+    "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\backend\\AgendamentoMedico.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\AgendamentoMedico.API.csproj",
+        "projectUniqueName": "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\backend\\AgendamentoMedico.API.csproj",
         "projectName": "AgendamentoMedico.API",
-        "projectPath": "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\AgendamentoMedico.API.csproj",
+        "projectPath": "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\backend\\AgendamentoMedico.API.csproj",
         "packagesPath": "C:\\Users\\jeff_\\.nuget\\packages\\",
-        "outputPath": "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\obj\\",
+        "outputPath": "D:\\Jefferson\\GitHub\\AgendamentoMedico.API\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\jeff_\\AppData\\Roaming\\NuGet\\NuGet.Config"
