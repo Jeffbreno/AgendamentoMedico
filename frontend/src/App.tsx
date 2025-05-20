@@ -1,9 +1,9 @@
 import './App.css'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import EspecialidadesPage from './pages/Admin/EspecialidadesPage';
-import ConveniosPage from './pages/Admin/ConveniosPage';
-import MedicosPage from './pages/Admin/MedicosPage';
-import PacientesPage from './pages/Admin/PacientesPage';
+import EspecialidadesPage from './pages/admin/EspecialidadesPage';
+import ConveniosPage from './pages/admin/ConveniosPage';
+import MedicosPage from './pages/admin/MedicosPage';
+import PacientesPage from './pages/admin/PacientesPage';
 import AgendamentoPage from './pages/AgendamentoPage';
 import AgendamentoNovoPage from './pages/AgendamentoNovoPage';
 

@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+# Instala o dotnet-ef para migrações
+RUN dotnet tool install --global dotnet-ef
+
+# Copia os arquivos do projeto
+COPY . .
+
+# Restaura as dependências
+RUN dotnet restore
+
+# Porta exposta
+EXPOSE 5110
+
+# Comando para rodar com watch (hot-reload)
+ENTRYPOINT ["dotnet", "watch", "run", "--urls", "http://0.0.0.0:5110"]

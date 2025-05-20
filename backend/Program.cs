@@ -11,22 +11,24 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddAutoMapper(typeof(Program));
 
 // Configuração do CORS
-builder.Services.AddCors(options => 
+builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy => policy.WithOrigins("http://localhost:5173")
-                       .AllowAnyMethod()
-                       .AllowAnyHeader());
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader());
 });
 
 // Configuração do Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v0.1", new OpenApiInfo { 
-        Title = "Agendamento Médico API", 
+    c.SwaggerDoc("v0.1", new OpenApiInfo
+    {
+        Title = "Agendamento Médico API",
         Version = "v0.1",
         Description = "API para gerenciamento de agendamentos médicos",
-        Contact = new OpenApiContact {
+        Contact = new OpenApiContact
+        {
             Name = "Desenvolvedor",
             Email = "jeffbreno@gmail.com"
         }
@@ -48,7 +50,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 errorNumbersToAdd: null);
             mysqlOptions.CommandTimeout(180); // Timeout aumentado para migrações
         });
-    
+
     if (builder.Environment.IsDevelopment())
     {
         options.EnableDetailedErrors();
@@ -68,7 +70,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => 
+    app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v0.1/swagger.json", "Agendamento Médico v0.1");
         c.RoutePrefix = "swagger";
@@ -86,9 +88,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Health Check endpoint
-app.MapGet("/health", () => Results.Ok(new { 
-    status = "Healthy", 
-    timestamp = DateTime.UtcNow 
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "Healthy",
+    timestamp = DateTime.UtcNow
 }));
 
 // Migração e Seed de dados
@@ -102,17 +105,17 @@ async Task InitializeDatabase(WebApplication app)
     using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
-    
+
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        
+
         logger.LogInformation("Aguardando o banco de dados ficar disponível...");
         await WaitForDbReady(context, logger);
-        
+
         logger.LogInformation("Aplicando migrações...");
         await context.Database.MigrateAsync();
-        
+
         if (!context.Convenios.Any())
         {
             logger.LogInformation("Iniciando seed de dados...");
@@ -137,10 +140,10 @@ async Task WaitForDbReady(ApplicationDbContext context, ILogger logger, int maxA
         }
         catch (Exception ex)
         {
-            logger.LogWarning("Tentativa {Attempt}/{MaxAttempts} falhou: {Message}", 
+            logger.LogWarning("Tentativa {Attempt}/{MaxAttempts} falhou: {Message}",
                 i + 1, maxAttempts, ex.Message);
         }
-        
+
         await Task.Delay(5000);
     }
     throw new Exception("Não foi possível conectar ao banco de dados após várias tentativas");
@@ -155,7 +158,7 @@ async Task SeedInitialData(ApplicationDbContext context)
         new() { Nome = "SulAmérica" },
         new() { Nome = "Bradesco Saúde" }
     };
-    
+
     // Especialidades
     var especialidades = new List<Especialidade>
     {
@@ -163,11 +166,11 @@ async Task SeedInitialData(ApplicationDbContext context)
         new() { Nome = "Dermatologia" },
         new() { Nome = "Ortopedia" }
     };
-    
+
     await context.Convenios.AddRangeAsync(convenios);
     await context.Especialidades.AddRangeAsync(especialidades);
     await context.SaveChangesAsync();
-    
+
     // Médicos
     var medico = new Medico
     {
@@ -177,7 +180,7 @@ async Task SeedInitialData(ApplicationDbContext context)
             .ToList()
     };
     await context.Medicos.AddAsync(medico);
-    
+
     // Pacientes
     var paciente = new Paciente
     {
@@ -187,6 +190,6 @@ async Task SeedInitialData(ApplicationDbContext context)
         Convenio = convenios.First()
     };
     await context.Pacientes.AddAsync(paciente);
-    
+
     await context.SaveChangesAsync();
 }
