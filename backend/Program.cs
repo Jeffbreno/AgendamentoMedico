@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AgendamentoMedico.API.Data;
 using AgendamentoMedico.API.Models;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,11 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuração básica da aplicação
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddAutoMapper(typeof(Program));
 

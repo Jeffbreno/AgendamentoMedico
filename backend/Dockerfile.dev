@@ -12,7 +12,7 @@ COPY . .
 RUN dotnet restore
 
 # Porta exposta
-EXPOSE 5110
+EXPOSE 80
 
 # Comando para rodar com watch (hot-reload)
 ENTRYPOINT ["dotnet", "watch", "run", "--urls", "http://0.0.0.0:5110"]

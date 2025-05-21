@@ -41,7 +41,8 @@ function AgendamentoNovoPage() {
         dataHora: `${horarioSelecionado.data}T${horarioSelecionado.horaInicio}:00`,
       });
 
-      navigate('/agendamentos');
+      setSucesso(true)
+      setTimeout(() => navigate('/agendamentos'), 2000);
     } catch {
       setErro('Erro ao agendar.');
     }
@@ -90,13 +91,17 @@ function AgendamentoNovoPage() {
               <option value={pacienteSelecionado.convenioId}>
                 {pacienteSelecionado.convenioNome}
               </option>
-          )}
+            )}
         </select>
       </div>
 
       {erro && <div className="text-red-500 mb-4 text-sm">{erro}</div>}
 
-      <button
+      {sucesso && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          Agendamento realizado com sucesso! Redirecionando...
+        </div>
+      )}<button
         onClick={confirmar}
         className="bg-blue-600 text-white px-4 py-2 rounded"
       >

@@ -9,6 +9,12 @@ namespace AgendamentoMedico.API.Helpers
         public MappingProfile()
         {
 
+            // Disponibilidade
+            CreateMap<DisponibilidadeDto, Disponibilidade>();
+            CreateMap<Disponibilidade, DisponibilidadeResponseDto>()
+                .ForMember(dest => dest.MedicoNome, opt => opt.MapFrom(src => src.Medico.Nome))
+                .ForMember(dest => dest.EspecialidadeNome, opt => opt.MapFrom(src => src.Especialidade.Nome));
+
             //Agendamentos
             CreateMap<Agendamento, AgendamentoReadDto>()
                 .ForMember(dest => dest.Paciente, opt => opt.MapFrom(src => src.Paciente.Nome))

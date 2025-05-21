@@ -80,7 +80,18 @@ namespace AgendamentoMedico.API.Controllers
             return CreatedAtAction(
                 nameof(DefinirDisponibilidade),
                 new { id = novaDisponibilidade.Id },
-                novaDisponibilidade);
+                new DisponibilidadeResponseDto
+                {
+                    Id = novaDisponibilidade.Id,
+                    MedicoId = novaDisponibilidade.MedicoId,
+                    MedicoNome = novaDisponibilidade.Medico.Nome,
+                    EspecialidadeId = novaDisponibilidade.EspecialidadeId,
+                    EspecialidadeNome = novaDisponibilidade.Especialidade.Nome,
+                    DiaSemana = novaDisponibilidade.DiaSemana,
+                    HoraInicio = novaDisponibilidade.HoraInicio.ToString("hh\\:mm"),
+                    HoraFim = novaDisponibilidade.HoraFim.ToString("hh\\:mm"),
+                    DuracaoConsultaMinutos = novaDisponibilidade.DuracaoConsultaMinutos
+                });
         }
 
         [HttpPost]
@@ -153,6 +164,27 @@ namespace AgendamentoMedico.API.Controllers
 
             return Ok(horarios);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Listar()
+        {
+            var disponibilidades = await _context.Disponibilidades
+                .Include(d => d.Medico)
+                .Include(d => d.Especialidade)
+                .ToListAsync();
+
+            return Ok(disponibilidades.Select(d => new
+            {
+                d.Id,
+                Medico = d.Medico.Nome,
+                Especialidade = d.Especialidade.Nome,
+                d.DiaSemana,
+                d.HoraInicio,
+                d.HoraFim,
+                d.DuracaoConsultaMinutos
+            }));
+        }
+
 
     }
 }
