@@ -185,6 +185,21 @@ namespace AgendamentoMedico.API.Controllers
             }));
         }
 
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeletarDisponibilidade(int id)
+        {
+            var disponibilidade = await _context.Disponibilidades.FindAsync(id);
+            if (disponibilidade == null)
+                return NotFound(new { Message = "Disponibilidade não encontrada." });
+
+            _context.Disponibilidades.Remove(disponibilidade);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
 
     }
 }

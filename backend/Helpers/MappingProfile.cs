@@ -24,6 +24,16 @@ namespace AgendamentoMedico.API.Helpers
                 .ForMember(dest => dest.DataHora, opt => opt.MapFrom(src => src.DataHora.ToString("yyyy-MM-ddTHH:mm:ssZ")))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
 
+            // Atendimentos
+            CreateMap<Atendimento, AtendimentoReadDto>()
+                .ForMember(dest => dest.Paciente, opt => opt.MapFrom(src => src.Agendamento.Paciente.Nome))
+                .ForMember(dest => dest.Medico, opt => opt.MapFrom(src => src.Agendamento.Medico.Nome))
+                .ForMember(dest => dest.Especialidade, opt => opt.MapFrom(src => src.Agendamento.Especialidade.Nome))
+                .ForMember(dest => dest.Convenio, opt => opt.MapFrom(src => src.Agendamento.Convenio.Nome))
+                .ForMember(dest => dest.DataConsulta, opt => opt.MapFrom(src => src.Agendamento.DataHora))
+                .ForMember(dest => dest.StatusConsulta, opt => opt.MapFrom(src => src.Agendamento.Status));
+
+
             // Especialidades
             CreateMap<Especialidade, EspecialidadeReadDto>();
             CreateMap<EspecialidadeCreateDto, Especialidade>();

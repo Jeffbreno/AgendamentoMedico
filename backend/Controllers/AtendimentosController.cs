@@ -1,6 +1,8 @@
+// Reescrito com AutoMapper para manter consistência com o projeto
 using AgendamentoMedico.API.Data;
 using AgendamentoMedico.API.DTOs;
 using AgendamentoMedico.API.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,18 +10,22 @@ namespace AgendamentoMedico.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AtendimentosController(ApplicationDbContext context) : ControllerBase
+    public class AtendimentosController(ApplicationDbContext context, IMapper mapper) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
+        private readonly IMapper _mapper = mapper;
 
         // POST: /api/atendimentos
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(AtendimentoReadDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CriarAtendimento([FromBody] AtendimentoCreateDto dto)
         {
             var agendamento = await _context.Agendamentos
                 .Include(a => a.Paciente)
+                .Include(a => a.Medico)
+                .Include(a => a.Especialidade)
+                .Include(a => a.Convenio)
                 .FirstOrDefaultAsync(a => a.Id == dto.AgendamentoId);
 
             if (agendamento == null)
@@ -35,17 +41,22 @@ namespace AgendamentoMedico.API.Controllers
             _context.Atendimentos.Add(atendimento);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(CriarAtendimento), new { id = atendimento.Id }, new
-            {
-                atendimento.Id,
-                atendimento.AgendamentoId,
-                atendimento.DataAtendimento,
-                atendimento.Observacoes
-            });
+            await _context.Entry(atendimento)
+                .Reference(a => a.Agendamento)
+                .Query()
+                .Include(a => a.Paciente)
+                .Include(a => a.Medico)
+                .Include(a => a.Especialidade)
+                .Include(a => a.Convenio)
+                .LoadAsync();
+
+            var atendimentoDto = _mapper.Map<AtendimentoReadDto>(atendimento);
+            return CreatedAtAction(nameof(CriarAtendimento), new { id = atendimento.Id }, atendimentoDto);
         }
 
         // GET: /api/atendimentos?dataInicio=...&dataFim=...&paciente=...
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AtendimentoReadDto>))]
         public async Task<IActionResult> GetAtendimentos(
             [FromQuery] DateTime? dataInicio,
             [FromQuery] DateTime? dataFim,
@@ -54,6 +65,9 @@ namespace AgendamentoMedico.API.Controllers
             var query = _context.Atendimentos
                 .Include(a => a.Agendamento)
                 .ThenInclude(a => a.Paciente)
+                .Include(a => a.Agendamento.Medico)
+                .Include(a => a.Agendamento.Especialidade)
+                .Include(a => a.Agendamento.Convenio)
                 .AsQueryable();
 
             if (dataInicio.HasValue)
@@ -65,18 +79,12 @@ namespace AgendamentoMedico.API.Controllers
             if (!string.IsNullOrWhiteSpace(paciente))
                 query = query.Where(a => a.Agendamento.Paciente.Nome.Contains(paciente));
 
-            var resultados = await query
+            var atendimentos = await query
                 .OrderByDescending(a => a.DataAtendimento)
-                .Select(a => new
-                {
-                    a.Id,
-                    a.DataAtendimento,
-                    a.Observacoes,
-                    Paciente = a.Agendamento.Paciente.Nome
-                })
                 .ToListAsync();
 
-            return Ok(resultados);
+            var atendimentosDto = _mapper.Map<List<AtendimentoReadDto>>(atendimentos);
+            return Ok(atendimentosDto);
         }
     }
 }

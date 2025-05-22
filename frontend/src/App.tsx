@@ -1,29 +1,49 @@
 import './App.css'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import EspecialidadesPage from './pages/admin/EspecialidadesPage';
-import ConveniosPage from './pages/admin/ConveniosPage';
-import MedicosPage from './pages/admin/MedicosPage';
-import PacientesPage from './pages/admin/PacientesPage';
+import withLayout from './hocs/withLayout';
+
+import EspecialidadesPage from './pages/EspecialidadesPage';
+import ConveniosPage from './pages/ConveniosPage';
+import MedicosPage from './pages/MedicosPage';
+import PacientesPage from './pages/PacientesPage';
+
 import AgendamentoPage from './pages/AgendamentoPage';
-import AgendamentoNovoPage from './pages/AgendamentoNovoPage';
-import DisponibilidadesPage from './pages/admin/DisponibilidadesPage';
+import AgendamentosPage from './pages/AgendamentosPage';
+import DisponibilidadesPage from './pages/DisponibilidadePage';
 import AtendimentosPage from './pages/AtendimentosPage';
-import AtendimentoNovoPage from './pages/AtendimentoNovoPage';
+
+const AgendamentoWithLayout = withLayout(AgendamentoPage, 'Agendamento');
+const AgendamentosWithLayout = withLayout(AgendamentosPage, 'Agendamentos');
+const DisponibilidadesWithLayout = withLayout(DisponibilidadesPage, 'Disponibilidades');
+const AtendimentosWithLayout = withLayout(AtendimentosPage, 'Atendimentos');
+const EspecialidadesWithLayout = withLayout(EspecialidadesPage, 'Especialidades');
+const ConveniosWithLayout = withLayout(ConveniosPage, 'Convênios');
+const MedicosWithLayout = withLayout(MedicosPage, 'Médicos');
+const PacientesWithLayout = withLayout(PacientesPage, 'Pacientes');
+
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin/especialidades" element={<EspecialidadesPage />} />
-        <Route path="/admin/convenios" element={<ConveniosPage />} />
-        <Route path="/admin/medicos" element={<MedicosPage />} />
-        <Route path="/admin/pacientes" element={<PacientesPage />} />
-        <Route path="*" element={<EspecialidadesPage />} />
-        <Route path="/agendamento" element={<AgendamentoPage />} />
-        <Route path="/agendamento/novo" element={<AgendamentoNovoPage />} />
-        <Route path="/admin/disponibilidades" element={<DisponibilidadesPage />} />
-        <Route path="/atendimentos" element={<AtendimentosPage />} />
-        <Route path="/atendimentos/novo" element={<AtendimentoNovoPage />} />
+        {/* Consultas */}
+        <Route path="/agendamento/novo" element={< AgendamentoWithLayout/>} />
+        <Route path="/agendamentos" element={< AgendamentosWithLayout/>} />
+        {/* <Route path="/agendamentos/novo" element={<NovoAgendamentoWithLayout />} /> */}
+        <Route path="/disponibilidades" element={<DisponibilidadesWithLayout />} />
+        
+        {/* Atendimentos */}
+        <Route path="/atendimentos" element={<AtendimentosWithLayout />} />
+        {/* <Route path="/atendimentos/novo" element={<NovoAtendimentoWithLayout />} /> */}
+        
+        {/* Cadastros */}
+        <Route path="*" element={<EspecialidadesWithLayout />} />
+        <Route path="/convenios" element={<ConveniosWithLayout />} />
+        <Route path="/medicos" element={<MedicosWithLayout />} />
+        <Route path="/pacientes" element={<PacientesWithLayout />} />
+        
+        {/* Fallback */}
+        {/* <Route path="*" element={<DashboardWithLayout />} /> */}
       </Routes>
     </BrowserRouter>
   )

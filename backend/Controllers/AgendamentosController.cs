@@ -1,3 +1,4 @@
+// Reescrito com base nas boas práticas sugeridas
 using AgendamentoMedico.API.Data;
 using AgendamentoMedico.API.DTOs;
 using AgendamentoMedico.API.Models;
@@ -16,9 +17,6 @@ namespace AgendamentoMedico.API.Controllers
 
         private readonly List<string> _statusValidos = ["Agendado", "Confirmado", "Cancelado", "Realizado", "Falta"];
 
-        /// <summary>
-        /// Cria um novo agendamento médico
-        /// </summary>
         // POST: /api/agendamentos
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(AgendamentoReadDto))]
@@ -51,24 +49,21 @@ namespace AgendamentoMedico.API.Controllers
 
             int diaSemana = (int)dto.DataHora.DayOfWeek;
 
-            // Encontrar uma disponibilidade compatível
-            var disponibilidade = await _context.Disponibilidades
+            var disponibilidade = _context.Disponibilidades
                 .Include(d => d.Medico)
                 .Where(d =>
                     d.EspecialidadeId == dto.EspecialidadeId &&
                     d.DiaSemana == diaSemana &&
-                    dto.DataHora.TimeOfDay >= d.HoraInicio &&
-                    dto.DataHora.TimeOfDay + TimeSpan.FromMinutes(d.DuracaoConsultaMinutos) <= d.HoraFim)
-                .FirstOrDefaultAsync();
+                    dto.DataHora.TimeOfDay >= d.HoraInicio)
+                .AsEnumerable()
+                .FirstOrDefault(d =>
+                    dto.DataHora.TimeOfDay + TimeSpan.FromMinutes(d.DuracaoConsultaMinutos) <= d.HoraFim);
 
             if (disponibilidade == null)
                 return BadRequest("Nenhuma disponibilidade encontrada para este horário.");
 
-            // Verificar se já existe agendamento no horário
             bool conflito = await _context.Agendamentos
-                .AnyAsync(a =>
-                    a.MedicoId == disponibilidade.MedicoId &&
-                    a.DataHora == dto.DataHora);
+                .AnyAsync(a => a.MedicoId == disponibilidade.MedicoId && a.DataHora == dto.DataHora);
 
             if (conflito)
                 return BadRequest("Horário já agendado.");
@@ -90,10 +85,7 @@ namespace AgendamentoMedico.API.Controllers
             return CreatedAtAction(nameof(ObterAgendamentoPorId), new { id = agendamento.Id }, agendamentoReadDto);
         }
 
-        /// <summary>
-        /// Obtém todos os agendamentos com filtros opcionais
-        /// </summary>
-        // GET: /api/agendamentos?dataInicio=AAAA-MM-DD&dataFim=AAAA-MM-DD&paciente=Nome
+        // GET: /api/agendamentos
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AgendamentoReadDto>))]
         public async Task<IActionResult> GetAgendamentos(
@@ -108,6 +100,11 @@ namespace AgendamentoMedico.API.Controllers
                 .Include(a => a.Convenio)
                 .Include(a => a.Medico)
                 .AsQueryable();
+
+            if (!dataInicio.HasValue && !dataFim.HasValue && string.IsNullOrEmpty(paciente))
+            {
+                query = query.Where(a => a.DataHora >= DateTime.Today);
+            }
 
             if (dataInicio.HasValue)
                 query = query.Where(a => a.DataHora >= dataInicio.Value);
@@ -127,10 +124,7 @@ namespace AgendamentoMedico.API.Controllers
             return Ok(agendamentosDto);
         }
 
-        /// <summary>
-        /// Obtém um agendamento por ID
-        /// </summary>
-        // GET: /api/agendamentos/1
+        // GET: /api/agendamentos/{id}
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AgendamentoReadDto))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -150,9 +144,7 @@ namespace AgendamentoMedico.API.Controllers
             return Ok(agendamentoDto);
         }
 
-        /// <summary>
-        /// Atualiza o status de um agendamento
-        /// </summary>
+        // PATCH: /api/agendamentos/{id}/status
         [HttpPatch("{id}/status")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AgendamentoReadDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -169,7 +161,6 @@ namespace AgendamentoMedico.API.Controllers
             agendamento.Status = novoStatus;
             await _context.SaveChangesAsync();
 
-            // Recarrega as entidades relacionadas para o DTO
             await _context.Entry(agendamento).Reference(a => a.Paciente).LoadAsync();
             await _context.Entry(agendamento).Reference(a => a.Especialidade).LoadAsync();
             await _context.Entry(agendamento).Reference(a => a.Convenio).LoadAsync();
@@ -178,6 +169,5 @@ namespace AgendamentoMedico.API.Controllers
             var agendamentoDto = _mapper.Map<AgendamentoReadDto>(agendamento);
             return Ok(agendamentoDto);
         }
-
     }
 }
