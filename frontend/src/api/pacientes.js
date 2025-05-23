@@ -33,3 +33,8 @@ export const deletePaciente = async (id) => {
     throw error;
   }
 };
+
+export const atualizarStatusAgendamento = async (id, novoStatus) => {
+  const response = await api.patch(`/agendamentos/${id}/status`, novoStatus);
+  return response.data;
+};

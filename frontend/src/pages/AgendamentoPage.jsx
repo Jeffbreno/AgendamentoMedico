@@ -3,9 +3,9 @@ import { getEspecialidades } from '../api/especialidades';
 import { getMedicos } from '../api/medicos';
 import { getPacientes } from '../api/pacientes';
 import { getConvenios } from '../api/convenios';
-import { getHorariosDisponiveis, agendarConsulta } from '../api/agendamentos';
+import { getHorariosDisponiveis } from '../api/disponibilidades';
+import { agendarConsulta } from '../api/agendamentos';
 import Loading from '../components/Loading';
-
 import { FaCalendarAlt, FaClock, FaUserMd } from 'react-icons/fa';
 
 function AgendamentoPage() {
@@ -14,14 +14,15 @@ function AgendamentoPage() {
   const [pacientes, setPacientes] = useState([]);
   const [convenios, setConvenios] = useState([]);
   const [horarios, setHorarios] = useState([]);
+  
   const [form, setForm] = useState({
     especialidadeId: '',
     data: '',
-    medico: ''
+    medicoId: '' // agora usamos o ID do médico
   });
 
   const [agendamento, setAgendamento] = useState({
-    paciente: '',
+    pacienteId: '',
     convenioId: '',
     dataHora: ''
   });
@@ -56,10 +57,17 @@ function AgendamentoPage() {
       setErro('Informe a especialidade e a data');
       return;
     }
+
     setLoading(true);
     try {
-      const data = await getHorariosDisponiveis(form);
+      const filtros = {
+        especialidadeId: parseInt(form.especialidadeId),
+        data: form.data,
+        medicoId: form.medicoId ? parseInt(form.medicoId) : undefined
+      };
+      const data = await getHorariosDisponiveis(filtros);
       setHorarios(data);
+      setErro('');
     } catch (err) {
       console.error(err);
       setErro('Erro ao buscar horários');
@@ -76,8 +84,8 @@ function AgendamentoPage() {
   };
 
   const confirmarAgendamento = async () => {
-    const { paciente, convenioId, dataHora } = agendamento;
-    if (!paciente || !convenioId || !dataHora) {
+    const { pacienteId, convenioId, dataHora } = agendamento;
+    if (!pacienteId || !convenioId || !dataHora) {
       setErro('Preencha todos os campos e selecione um horário');
       return;
     }
@@ -86,7 +94,8 @@ function AgendamentoPage() {
     try {
       await agendarConsulta({
         ...agendamento,
-        especialidadeId: form.especialidadeId,
+        pacienteId: parseInt(pacienteId),
+        especialidadeId: parseInt(form.especialidadeId),
         convenioId: parseInt(convenioId)
       });
       setConfirmado(true);
@@ -111,7 +120,7 @@ function AgendamentoPage() {
       </h2>
 
       <div className="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <select name="especialidadeId" value={form.especialidadeId} onChange={(e) => setForm({ ...form, especialidadeId: e.target.value })} className="border p-2 rounded">
+        <select value={form.especialidadeId} onChange={(e) => setForm({ ...form, especialidadeId: e.target.value })} className="border p-2 rounded">
           <option value="">Selecione a especialidade</option>
           {especialidades.map((e) => (
             <option key={e.id} value={e.id}>{e.nome}</option>
@@ -120,10 +129,10 @@ function AgendamentoPage() {
 
         <input type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} className="border p-2 rounded" />
 
-        <select name="medico" value={form.medico} onChange={(e) => setForm({ ...form, medico: e.target.value })} className="border p-2 rounded">
+        <select value={form.medicoId} onChange={(e) => setForm({ ...form, medicoId: e.target.value })} className="border p-2 rounded">
           <option value="">(Opcional) Filtrar por médico</option>
           {medicos.map((m) => (
-            <option key={m.id} value={m.nome}>{m.nome}</option>
+            <option key={m.id} value={m.id}>{m.nome}</option>
           ))}
         </select>
 
@@ -159,14 +168,14 @@ function AgendamentoPage() {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select name="paciente" value={agendamento.paciente} onChange={(e) => setAgendamento({ ...agendamento, paciente: e.target.value })} className="border p-2 rounded">
+            <select value={agendamento.paciente} onChange={(e) => setAgendamento({ ...agendamento, pacienteId: e.target.value })} className="border p-2 rounded">
               <option value="">Selecione o paciente</option>
               {pacientes.map((p) => (
-                <option key={p.id} value={p.nome}>{p.nome}</option>
+                <option key={p.id} value={p.id}>{p.nome}</option>
               ))}
             </select>
 
-            <select name="convenioId" value={agendamento.convenioId} onChange={(e) => setAgendamento({ ...agendamento, convenioId: e.target.value })} className="border p-2 rounded">
+            <select value={agendamento.convenioId} onChange={(e) => setAgendamento({ ...agendamento, convenioId: e.target.value })} className="border p-2 rounded">
               <option value="">Selecione o convênio</option>
               {convenios.map((c) => (
                 <option key={c.id} value={c.id}>{c.nome}</option>

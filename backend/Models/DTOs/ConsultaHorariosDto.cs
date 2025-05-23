@@ -4,6 +4,6 @@ namespace AgendamentoMedico.API.DTOs
     {
         public int EspecialidadeId { get; set; }
         public DateTime Data { get; set; }
-        public string? Medico { get; set; }
+        public int? MedicoId { get; set; }
     }
 }

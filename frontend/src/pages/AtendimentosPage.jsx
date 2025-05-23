@@ -1,29 +1,32 @@
-import { useEffect, useState } from 'react';
-import { getAgendamentos } from '../api/agendamentos';
-import { gerarAtendimento } from '../api/atendimentos';
-import Loading from '../components/Loading';
-import Table from '../components/Table';
-
-import { FaClipboardCheck, FaStethoscope } from 'react-icons/fa';
+import { useEffect, useState } from "react";
+import { getAgendamentos } from "../api/agendamentos";
+import { gerarAtendimento } from "../api/atendimentos";
+import Loading from "../components/Loading";
+import Table from "../components/Table";
+import Pagination from "../components/Pagination";
+import { FaClipboardCheck, FaStethoscope } from "react-icons/fa";
 
 function AtendimentosPage() {
   const [agendamentos, setAgendamentos] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState('');
-  const [observacoes, setObservacoes] = useState('');
+  const [erro, setErro] = useState("");
+  const [observacoes, setObservacoes] = useState("");
   const [selecionado, setSelecionado] = useState(null);
-  const [mensagem, setMensagem] = useState('');
+  const [mensagem, setMensagem] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const buscarAgendamentos = async () => {
     setLoading(true);
-    setErro('');
+    setErro("");
     try {
-      const hoje = new Date().toISOString().split('T')[0];
+      const hoje = new Date().toISOString().split("T")[0];
       const data = await getAgendamentos({ dataInicio: hoje });
       setAgendamentos(data);
     } catch (err) {
       console.error(err);
-      setErro('Erro ao buscar agendamentos');
+      setErro("Erro ao buscar agendamentos");
     } finally {
       setLoading(false);
     }
@@ -31,22 +34,22 @@ function AtendimentosPage() {
 
   const registrarAtendimento = async () => {
     if (!selecionado) {
-      setErro('Selecione um agendamento');
+      setErro("Selecione um agendamento");
       return;
     }
     setLoading(true);
     try {
       await gerarAtendimento({
         agendamentoId: selecionado.id,
-        observacoes
+        observacoes,
       });
-      setMensagem('Atendimento registrado com sucesso!');
+      setMensagem("Atendimento registrado com sucesso!");
       setSelecionado(null);
-      setObservacoes('');
+      setObservacoes("");
       await buscarAgendamentos(); // Atualiza a lista
     } catch (err) {
       console.error(err);
-      setErro('Erro ao registrar atendimento');
+      setErro("Erro ao registrar atendimento");
     } finally {
       setLoading(false);
     }
@@ -56,31 +59,37 @@ function AtendimentosPage() {
     buscarAgendamentos();
   }, []);
 
+  const agendamentosPaginados = agendamentos.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const totalPages = Math.ceil(agendamentos.length / itemsPerPage);
+
   const columns = [
-    { header: 'Paciente', accessor: 'paciente' },
-    { header: 'Especialidade', accessor: 'especialidadeNome' },
-    { header: 'Médico', accessor: 'medico' },
+    { header: "Paciente", accessor: "paciente" },
+    { header: "Especialidade", accessor: "especialidade" },
+    { header: "Médico", accessor: "medico" },
     {
-      header: 'Data/Hora',
-      accessor: 'dataHora',
-      render: (v) => new Date(v).toLocaleString('pt-BR')
+      header: "Data/Hora",
+      accessor: "dataHora",
+      render: (v) => new Date(v).toLocaleString("pt-BR"),
     },
     {
-      header: 'Selecionar',
-      accessor: 'id',
+      header: "Selecionar",
+      accessor: "id",
       render: (_, row) => (
         <button
           onClick={() => {
             setSelecionado(row);
-            setObservacoes('');
-            setMensagem('');
+            setObservacoes("");
+            setMensagem("");
           }}
           className="text-blue-600 underline text-sm"
         >
           Registrar Atendimento
         </button>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -96,21 +105,31 @@ function AtendimentosPage() {
       {loading ? (
         <Loading />
       ) : (
-        <div className="bg-white p-4 rounded shadow">
-          <Table
-            data={agendamentos}
-            columns={columns}
-            emptyMessage="Nenhum agendamento encontrado para atendimento"
-          />
-        </div>
+        <>
+          <div className="bg-white p-4 rounded shadow">
+            <Table
+              data={agendamentosPaginados}
+              columns={columns}
+              emptyMessage="Nenhum agendamento encontrado para atendimento"
+            />
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </>
       )}
 
       {selecionado && (
         <div className="bg-white p-6 mt-6 rounded-lg shadow-md">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <FaClipboardCheck className="text-blue-600" />
-            Atendimento para {selecionado.paciente} em{' '}
-            {new Date(selecionado.dataHora).toLocaleString('pt-BR')}
+            Atendimento para {selecionado.paciente} em{" "}
+            {new Date(selecionado.dataHora).toLocaleString("pt-BR")}
           </h3>
 
           <textarea
